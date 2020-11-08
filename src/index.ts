@@ -5,7 +5,6 @@ import {findIndex} from "./findIndex";
 const cache: any = {};
 
 export const indexer = (cwd: string = process.cwd(), {watch}: { watch?: boolean } = {}) => {
-  watch && console.log('generate started...');
   return findIndex(cwd)
     .then(matches => Promise.all(matches.map(async path => {
       const exports = await findExport(path);
@@ -13,6 +12,6 @@ export const indexer = (cwd: string = process.cwd(), {watch}: { watch?: boolean 
       watch && (cache[path] = exports);
       return createIndex(dirname(path), exports);
     })))
-    .then(() => console.log('generated'))
+    .then(() => !watch && console.log('generated'))
     .catch(e => console.error(e));
 }
