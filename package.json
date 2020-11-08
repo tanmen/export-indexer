@@ -1,10 +1,13 @@
 {
   "name": "export-indexer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/index.js",
   "type": "dist/index.d.ts",
   "license": "MIT",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "bin": {
     "export-indexer": "dist/bin/cli.js"
   },
