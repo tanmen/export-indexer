@@ -7,6 +7,7 @@ describe('findExport', () => {
       .resolves
       .toEqual([
         'index.ts',
+        'items',
         'jsx.jsx',
         'normal.js',
         'one.ts',
