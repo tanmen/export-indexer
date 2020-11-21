@@ -14,7 +14,6 @@ export const indexer = (cwd: string = process.cwd(), {watch, ext}: Option) => {
           return Promise.resolve();
         }
         cache[path] = exports;
-        console.log('update');
       }
       return createIndex(dirname(path), exports, {watch, ext});
     })))
