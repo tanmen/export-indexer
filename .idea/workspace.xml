@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ff006838-dc3a-4b21-b8ef-8c2d352e33b5" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/types/option.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/ja.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bin/cli.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/cli.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/createIndex.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/createIndex.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,7 +109,8 @@
       <updated>1604867887044</updated>
       <workItem from="1604867888184" duration="135000" />
       <workItem from="1604868185841" duration="10483000" />
-      <workItem from="1605977943031" duration="1417000" />
+      <workItem from="1605977943031" duration="1536000" />
+      <workItem from="1605981249544" duration="1771000" />
     </task>
     <servers />
   </component>
