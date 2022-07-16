@@ -2,7 +2,6 @@
   "name": "export-indexer",
   "version": "0.1.2",
   "main": "dist/index.js",
-  "type": "dist/index.d.ts",
   "license": "MIT",
   "files": [
     "dist",
@@ -16,7 +15,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "chokidar": "^3.4.3",
     "glob": "^7.1.6",
     "ignore": "^5.1.8"
   },
