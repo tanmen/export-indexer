@@ -5,18 +5,12 @@ import {findIndex} from "./findIndex";
 
 const cache: any = {};
 
-export const indexer = (cwd: string = process.cwd(), {watch, ext}: Option) => {
+export const indexer = (cwd: string = process.cwd(), {ext}: Option) => {
   return findIndex(cwd)
     .then(matches => Promise.all(matches.map(async path => {
       const exports = await findExport(path);
-      if (watch) {
-        if (Object.is(cache[path], exports)) {
-          return Promise.resolve();
-        }
-        cache[path] = exports;
-      }
-      return createIndex(dirname(path), exports, {watch, ext});
+      return createIndex(dirname(path), exports, {ext});
     })))
-    .then(() => !watch && console.log('generated'))
+    .then(() => console.log('generated'))
     .catch(e => console.error(e));
 }
