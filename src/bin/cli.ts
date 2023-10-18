@@ -26,19 +26,13 @@ const main = async () => {
         await indexer(process.cwd(), {ext})
           .then((res) => {
             spinner.stop();
+            console.clear();
             console.log('Generated:');
             console.log(loggable(res));
           })
       } finally {
         running = false;
       }
-      // switch (eventType) {
-      //   case 'rename':
-      //     return console.log('rename')
-      //   case 'change':
-      //     if (filename !== '.index') return;
-      //     return exec();
-      // }
     })
   }
   return results;
@@ -48,6 +42,7 @@ spinner.start();
 main()
   .then((res) => {
     spinner.stop();
+    console.clear();
     console.log('Generated:');
     console.log(loggable(res))
   })
