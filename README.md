@@ -2,14 +2,20 @@
 
 This library is a library that automatically generates an index file.
 
-## Install
-`yarn`
+## How to run
 ```
-yarn add -D export-indexer
+npx export-indexer
 ```
+
+### Install
 `npm`
-```
+```shell
 npm install -D export-indexer
+```
+
+`yarn`
+```shell
+yarn add -D export-indexer
 ```
 
 ## Usage
@@ -25,7 +31,12 @@ If the directory structure is as follows
 
 Do the following in terminal:
 ```
-yarn export-indexer
+npx export-indexer
+```
+
+If you want to detect changes:
+```shell
+npx export-indexer --watch
 ```
 
 Then, the following contents will be output.
