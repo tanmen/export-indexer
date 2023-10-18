@@ -1,9 +1,16 @@
 {
   "name": "export-indexer",
-  "version": "1.0.0",
-  "main": "dist/index.mjs",
+  "version": "1.0.1",
   "type": "module",
   "license": "MIT",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
   "files": [
     "dist",
     "src"
@@ -13,7 +20,7 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "npx unbuild"
   },
   "dependencies": {
     "glob": "^7.1.6",
@@ -27,6 +34,7 @@
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
+    "tsup": "^7.2.0",
     "typescript": "^5.2.2"
   }
 }
