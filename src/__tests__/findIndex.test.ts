@@ -6,6 +6,7 @@ describe('findIndex', () => {
     expect(findIndex(path.join(process.cwd(), 'test')))
       .resolves
       .toEqual([
-        '.index'
+        '.index',
+        'items/.index'
       ]))
 });
