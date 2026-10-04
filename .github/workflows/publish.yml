@@ -4,11 +4,10 @@ on:
   push:
     branches:
       - main
+  pull_request: {}
+
 permissions:
-  contents: write # to be able to publish a GitHub release
-  issues: write # to be able to comment on released issues
-  pull-requests: write # to be able to comment on released pull requests
-  id-token: write # to enable use of OIDC for npm provenance
+  contents: read
 
 jobs:
   build:
@@ -25,12 +24,22 @@ jobs:
       - run: yarn install --immutable
       - run: yarn test
       - run: yarn tsc --noEmit
+      - run: yarn build
 
   publish:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # npm trusted publishing (OIDC); provenance is attached automatically
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Enable Corepack
         run: corepack enable
       - uses: actions/setup-node@v4
@@ -38,11 +47,11 @@ jobs:
           node-version-file: '.node-version'
           cache: 'yarn'
           cache-dependency-path: 'yarn.lock'
-          registry-url: https://registry.npmjs.org/
+          # No registry-url: it writes an .npmrc that expects NODE_AUTH_TOKEN.
+          # npm authenticates through trusted publishing (OIDC) instead.
       - run: yarn install --immutable
       - run: yarn build
       - name: Release
-        run: npx semantic-release
+        run: yarn semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

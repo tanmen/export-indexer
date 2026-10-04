@@ -3,6 +3,10 @@
   "version": "1.0.4",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanmen/export-indexer.git"
+  },
   "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -18,7 +22,7 @@
   "bin": "dist/bin/cli.mjs",
   "scripts": {
     "test": "jest",
-    "build": "npx unbuild"
+    "build": "unbuild"
   },
   "dependencies": {
     "glob": "^7.1.6",
@@ -26,16 +30,19 @@
     "ora": "^7.0.1"
   },
   "devDependencies": {
-    "@semantic-release/commit-analyzer": "^13.0.0",
-    "@semantic-release/npm": "^12.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.1",
+    "@semantic-release/commit-analyzer": "13.0.1",
+    "@semantic-release/github": "12.0.10",
+    "@semantic-release/npm": "13.2.0",
+    "@semantic-release/release-notes-generator": "14.1.1",
     "@types/glob": "^7.1.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^14.14.6",
     "jest": "^30.5.2",
+    "semantic-release": "25.0.9",
     "ts-jest": "^29.4.14",
     "ts-node": "^9.0.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "unbuild": "3.6.1"
   },
   "release": {
     "plugins": [
