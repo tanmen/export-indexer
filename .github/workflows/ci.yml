@@ -1,0 +1,29 @@
+name: CI
+
+# Checks pull requests and main. Publishing to npm is release.yml; this
+# workflow publishes nothing.
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+          cache: 'yarn'
+          cache-dependency-path: 'yarn.lock'
+      - run: yarn install --immutable
+      - run: yarn test
+      - run: yarn tsc --noEmit
+      - run: yarn build
