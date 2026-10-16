@@ -1,0 +1,164 @@
+name: Release
+
+# Publishes what landed on main to npm. There is no release PR.
+#
+#   merge to main (a subject that bumps the version: feat / fix / ...)
+#     └─ an external timer (it receives the webhook for pushes to main and, once
+#        pushes stop for a while, starts this workflow with workflow_dispatch;
+#        a burst of merges ends up as one run)
+#          └─ this workflow
+#               ├─ decide   tanmen/actions' release-decide decides whether to
+#               │           release, the version and the notes
+#               └─ publish  writes the version into package.json (not
+#                           committed), builds, publishes to npm, then creates
+#                           the tag and the GitHub Release
+#
+# Triggers are workflow_dispatch (the timer and by hand) and schedule (the
+# fallback when the timer is down) only. There is no push trigger: it would
+# run the decision on every merge.
+# The timer only starts release.yml files that use release-decide AND have a
+# schedule trigger, so removing the schedule also stops the timer.
+# In a public repository GitHub disables workflows with a schedule trigger
+# after 60 days without repository activity. A disabled workflow does not
+# start on workflow_dispatch either. Re-enable it from the Actions tab or with
+# `gh workflow enable release.yml`.
+#
+# Tags are the source of truth for the version. release-decide reads the
+# Conventional Commits subjects since the last tag (v1.0.5, ...) and picks the
+# next version (fix -> patch, feat -> minor, feat! / BREAKING CHANGE -> major).
+# The version in package.json is never written back. The list of changes goes
+# to the GitHub Release.
+#
+# npm authenticates through trusted publishing (OIDC); there is no token. The
+# package's Trusted Publisher on npmjs.com names this file (release.yml).
+# Renaming the file makes `npm publish` fail with ENEEDAUTH until the Trusted
+# Publisher is recreated. A new Trusted Publisher expires unless it publishes
+# within 2 days of being created (npm docs).
+#
+# Build without touching npm, the tag or the GitHub Release:
+#   gh workflow run release.yml -f dry-run=true
+# With nothing to release, it builds the last released version and stops at
+# `npm pack --dry-run`.
+
+on:
+  schedule:
+    # 03:23 JST (runs at minute 0 start late)
+    - cron: "23 18 * * *"
+  workflow_dispatch:
+    inputs:
+      # Must have a default: the timer dispatches with no inputs.
+      dry-run:
+        description: Build and run npm pack --dry-run only; do not touch npm, the tag or the GitHub Release
+        type: boolean
+        default: false
+
+# One run at a time, whether it comes from the timer, by hand or the schedule.
+# An earlier run does nothing once main has moved on; the later run releases
+# everything. Dry runs get their own queue: only one run can wait in a group and
+# a newer run cancels the waiting one, so a dry run must not push out a
+# waiting release. (On schedule, inputs is empty and the run takes "release".)
+concurrency:
+  group: ${{ inputs.dry-run && 'release-dry-run' || 'release' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      # Empty when not releasing; the reason is in the step summary.
+      version: ${{ steps.decide.outputs.version }}
+      tag: ${{ steps.decide.outputs.tag }}
+      notes: ${{ steps.decide.outputs.notes }}
+      # The last released version. A dry run with nothing to release builds it.
+      last-version: ${{ steps.decide.outputs.last-version }}
+    steps:
+      # The action checks out the full history with tags and sets up Node
+      # itself, so it gets a job of its own.
+      # No `paths`: npm gets package.json, README.md and the "files" in
+      # package.json (dist, built from src, and src). No commit with a
+      # version-bumping subject has ever touched only paths outside of that
+      # (test/, jest.config.ts, .github/, ...) as of 2026-10-16. Add exclusions
+      # when one does.
+      - id: decide
+        uses: tanmen/actions/release-decide@v1.1.0
+
+  publish:
+    needs: decide
+    # A dry run builds even when there is nothing to release. (On schedule,
+    # inputs is empty and counts as false.)
+    if: needs.decide.outputs.version != '' || inputs.dry-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # the tag and the GitHub Release
+      id-token: write # npm trusted publishing (OIDC); provenance is attached automatically
+    env:
+      # The version to publish. A dry run with nothing to release uses the last one.
+      VERSION: ${{ needs.decide.outputs.version || needs.decide.outputs.last-version }}
+    steps:
+      # Do not leave the write token in .git/config, where dependencies run
+      # during the build could read it. gh uses GH_TOKEN.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # Node 25+ does not ship Corepack, so enable it with the runner's Node
+      # before setup-node (same order as ci.yml).
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          # No cache for a build that gets published. No registry-url either:
+          # it writes an .npmrc that expects NODE_AUTH_TOKEN.
+          package-manager-cache: false
+      - run: yarn install --immutable
+      - run: yarn test
+
+      - name: Write the version into package.json (not committed)
+        run: |
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version to build: decide stopped before counting versions (see its step summary)."
+            exit 1
+          fi
+          npm pkg set "version=$VERSION"
+      - run: yarn build
+
+      - name: Show the package contents (a dry run stops here)
+        if: inputs.dry-run
+        run: npm pack --dry-run
+
+      # npm never accepts the same version twice. If an earlier run published
+      # and then failed before creating the tag, the next run tries the same
+      # version again. When that version's gitHead (the commit it was published
+      # from) is this commit, skip publishing and go on to the tag. Otherwise
+      # stop: the version holds older code. Create the tag v<version> and its
+      # Release at that commit, then rerun; the newer changes go out as the
+      # next version.
+      - name: Publish to npm
+        if: ${{ !inputs.dry-run }}
+        run: |
+          name=$(node -p 'require("./package.json").name')
+          if published=$(npm view "$name@$VERSION" gitHead 2>/dev/null); then
+            if [ "$published" != "$GITHUB_SHA" ]; then
+              echo "::error::$name@$VERSION is already on npm from another commit (gitHead: ${published:-none})."
+              exit 1
+            fi
+            echo "$name@$VERSION is already on npm from this commit; skipping to the tag."
+          else
+            # ENEEDAUTH: the Trusted Publisher on npmjs.com does not name
+            # release.yml, or it has expired. Its "Allowed actions" must also
+            # allow npm publish (new ones allow only npm stage publish).
+            npm publish
+          fi
+
+      - name: Create the tag and the GitHub Release
+        if: ${{ !inputs.dry-run }}
+        run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --notes "$NOTES"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.decide.outputs.tag }}
+          NOTES: ${{ needs.decide.outputs.notes }}

@@ -1,11 +1,12 @@
 version: 2
 updates:
-  # Pushing to main runs semantic-release, which publishes to npm. A "fix(deps)"
-  # prefix would turn every merged dependency update into a release, so use
-  # "chore(deps)". yarn.lock is not part of the published package, so
-  # transitive updates never reach users anyway. When a PR changes the ranges
-  # in "dependencies" (glob, ignore, ora), retitle it to "fix(deps):" before
-  # merging if it should be released.
+  # release.yml publishes when main has a commit whose subject bumps the
+  # version (fix / feat / perf / breaking). A "fix(deps)" prefix would publish
+  # a new version for every merged dependency update, so use "chore(deps)".
+  # yarn.lock is not part of the published package, so transitive updates never
+  # reach users anyway. When a PR changes the ranges in "dependencies" (glob,
+  # ignore, ora), retitle it to "fix(deps):" before merging if it should be
+  # released.
   # open-pull-requests-limit: 0 keeps version updates off; security updates
   # still open PRs and use this prefix.
   - package-ecosystem: npm
@@ -16,11 +17,18 @@ updates:
     commit-message:
       prefix: "chore(deps)"
 
-  # Actions only run in CI, so updates never reach users.
+  # Only tanmen/actions, to bump the pinned tanmen/actions/release-decide@vX.Y.Z
+  # in release.yml. Its tags are never moved and there is no floating v1, so
+  # nothing else would update it. Other actions are left alone.
+  # Dependabot names a version-pinned action by owner/repo (the subdirectory is
+  # not part of the name), so the dependency name is "tanmen/actions".
+  # Actions only run in CI, so updates never reach users: "chore(deps)".
+  # There is no auto-merge bot in this repository; a person merges these PRs.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 0
+    allow:
+      - dependency-name: "tanmen/actions"
     commit-message:
       prefix: "chore(deps)"
