@@ -84,7 +84,7 @@ jobs:
       # (test/, jest.config.ts, .github/, ...) as of 2026-10-16. Add exclusions
       # when one does.
       - id: decide
-        uses: tanmen/actions/release-decide@v1.1.0
+        uses: tanmen/actions/release-decide@v1.1.1
 
   publish:
     needs: decide
